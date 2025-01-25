@@ -40,7 +40,7 @@ class OrderControllerTest {
         
         logger.info("Sending request: {}", objectMapper.writeValueAsString(request));
 
-        MvcResult result = mockMvc.perform(post("/api/orders")
+        MvcResult result = mockMvc.perform(post("/api/orders/v1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(request().asyncStarted())
@@ -63,7 +63,7 @@ class OrderControllerTest {
     void createOrder_WithEmptyProducts_ShouldReturnBadRequest() throws Exception {
         OrderRequest request = new OrderRequest("CUST123", List.of());
 
-        MvcResult result = mockMvc.perform(post("/api/orders")
+        MvcResult result = mockMvc.perform(post("/api/orders/v1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(request().asyncStarted())
@@ -85,7 +85,7 @@ class OrderControllerTest {
         );
         OrderRequest request = new OrderRequest("CUST123", products);
 
-        MvcResult result = mockMvc.perform(post("/api/orders")
+        MvcResult result = mockMvc.perform(post("/api/orders/v1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(request().asyncStarted())
@@ -93,6 +93,7 @@ class OrderControllerTest {
 
         mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
+                .andDo(print())
                 .andExpect(jsonPath("$.totalPrice").value("30.0"))
                 .andExpect(jsonPath("$.status").value("PAYMENT_SUCCESS"))
                 .andExpect(jsonPath("$.description").value("Order processed successfully"))

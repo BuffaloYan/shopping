@@ -17,11 +17,15 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/orders/v1")
 public class OrderController {
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
+    private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
     
     @PostMapping
     public CompletableFuture<ResponseEntity<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest order) {
@@ -54,7 +58,7 @@ public class OrderController {
                 return ResponseEntity.internalServerError()
                     .body(new OrderResponse("N/A", null, "PAYMENT_FAILED", "Payment processing failed", "N/A"));
             }
-        });
+        }, virtualExecutor);
     }
 
     /**
@@ -63,13 +67,7 @@ public class OrderController {
      * @return
      */
     public CompletableFuture<PaymentResponse> makePayment(OrderRequest orderRequest) {
-        try {
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("Order processing interrupted", e);
-        }
-
-        return CompletableFuture.completedFuture(new PaymentResponse("PAYMENT_SUCCESS", "INV123"));
+        return new CompletableFuture<PaymentResponse>()
+            .completeOnTimeout(new PaymentResponse("PAYMENT_SUCCESS", "INV123"), 200, TimeUnit.MILLISECONDS);
     }
 }
