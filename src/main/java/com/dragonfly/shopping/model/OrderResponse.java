@@ -6,5 +6,6 @@ public record OrderResponse(
     String orderId,
     BigDecimal totalPrice,
     String status,
-    String description
+    String description,
+    String invoiceId
 ) {} 

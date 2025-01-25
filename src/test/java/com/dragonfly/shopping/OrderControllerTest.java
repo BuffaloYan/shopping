@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -52,7 +53,8 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.orderId").exists())
                 .andExpect(jsonPath("$.totalPrice").value("99.99"))
                 .andExpect(jsonPath("$.status").value("PAYMENT_SUCCESS"))
-                .andExpect(jsonPath("$.description").value("Order processed successfully"));
+                .andExpect(jsonPath("$.description").value("Order processed successfully"))
+                .andExpect(jsonPath("$.invoiceId").value("INV123"));
 
         logger.info("Response received and validated");
     }
@@ -71,7 +73,8 @@ class OrderControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.orderId").value("N/A"))
                 .andExpect(jsonPath("$.status").value("INVALID_REQUEST"))
-                .andExpect(jsonPath("$.description").value("No products in the order"));
+                .andExpect(jsonPath("$.description").value("No products in the order"))
+                .andExpect(jsonPath("$.invoiceId").value("N/A"));
     }
 
     @Test
@@ -92,6 +95,7 @@ class OrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalPrice").value("30.0"))
                 .andExpect(jsonPath("$.status").value("PAYMENT_SUCCESS"))
-                .andExpect(jsonPath("$.description").value("Order processed successfully"));
+                .andExpect(jsonPath("$.description").value("Order processed successfully"))
+                .andExpect(jsonPath("$.invoiceId").value("INV123"));
     }
 } 
