@@ -55,9 +55,11 @@ configurations {
 }
 
 bootRun {
-	systemProperty "spring.profiles.active", "dev"
-	jvmArgs = [
-		"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005",
-		"-Dspring.profiles.active=dev"
-	]
+	systemProperty "spring.profiles.active", System.getProperty("spring.profiles.active", "dev")
+	
+	if (System.getProperty("spring.profiles.active") == "dev") {
+		jvmArgs = [
+			"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+		]
+	}
 }

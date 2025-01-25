@@ -51,7 +51,8 @@ class OrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.orderId").exists())
                 .andExpect(jsonPath("$.totalPrice").value("99.99"))
-                .andExpect(jsonPath("$.status").value("PAYMENT_SUCCESS"));
+                .andExpect(jsonPath("$.status").value("PAYMENT_SUCCESS"))
+                .andExpect(jsonPath("$.description").value("Order processed successfully"));
 
         logger.info("Response received and validated");
     }
@@ -68,8 +69,9 @@ class OrderControllerTest {
 
         mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.orderId").value("INVALID_REQUEST"))
-                .andExpect(jsonPath("$.status").value("No products in the order"));
+                .andExpect(jsonPath("$.orderId").value("N/A"))
+                .andExpect(jsonPath("$.status").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.description").value("No products in the order"));
     }
 
     @Test
@@ -89,6 +91,7 @@ class OrderControllerTest {
         mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalPrice").value("30.0"))
-                .andExpect(jsonPath("$.status").value("PAYMENT_SUCCESS"));
+                .andExpect(jsonPath("$.status").value("PAYMENT_SUCCESS"))
+                .andExpect(jsonPath("$.description").value("Order processed successfully"));
     }
 } 

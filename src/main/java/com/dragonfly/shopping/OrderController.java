@@ -27,7 +27,7 @@ public class OrderController {
         return CompletableFuture.supplyAsync(() -> {
             if (order.products().isEmpty()) {
                 logger.warn("Order request received with no products");
-                return ResponseEntity.badRequest().body(new OrderResponse("INVALID_REQUEST", null, "No products in the order"));
+                return ResponseEntity.badRequest().body(new OrderResponse("N/A", null, "INVALID_REQUEST", "No products in the order"));
             }
 
             BigDecimal totalPrice = order.products().stream()
@@ -46,7 +46,7 @@ public class OrderController {
                 logger.error("Order processing interrupted", e);
             }
 
-            OrderResponse response = new OrderResponse(orderId, totalPrice, "PAYMENT_SUCCESS");
+            OrderResponse response = new OrderResponse(orderId, totalPrice, "PAYMENT_SUCCESS", "Order processed successfully");
             logger.info("Order processed successfully: {}", response);
             return ResponseEntity.ok(response);
         });
