@@ -45,9 +45,9 @@
       </ResultCollector>
       <hashTree/>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group V1">
-        <intProp name="ThreadGroup.num_threads">1000</intProp>
-        <intProp name="ThreadGroup.ramp_time">1</intProp>
-        <longProp name="ThreadGroup.duration">30</longProp>
+        <intProp name="ThreadGroup.num_threads">3000</intProp>
+        <intProp name="ThreadGroup.ramp_time">15</intProp>
+        <longProp name="ThreadGroup.duration">60</longProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
@@ -89,6 +89,7 @@
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
         </HTTPSamplerProxy>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
@@ -100,6 +101,10 @@
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">accept</stringProp>
                 <stringProp name="Header.value">*</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">connection</stringProp>
+                <stringProp name="Header.value">keep-alive</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>
@@ -144,7 +149,7 @@
         <hashTree/>
       </hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group V2" enabled="false">
-        <intProp name="ThreadGroup.num_threads">1000</intProp>
+        <intProp name="ThreadGroup.num_threads">3000</intProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <longProp name="ThreadGroup.duration">30</longProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -190,7 +195,7 @@
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">content-type</stringProp>
@@ -200,12 +205,16 @@
                 <stringProp name="Header.name">accept</stringProp>
                 <stringProp name="Header.value">*</stringProp>
               </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">connection</stringProp>
+                <stringProp name="Header.value">keep-alive</stringProp>
+              </elementProp>
             </collectionProp>
           </HeaderManager>
           <hashTree/>
         </hashTree>
         <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree">
-          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <boolProp name="ResultCollector.error_logging">true</boolProp>
           <objProp>
             <name>saveConfig</name>
             <value class="SampleSaveConfiguration">
