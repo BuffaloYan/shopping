@@ -26,17 +26,13 @@ public class OrderController2 {
     @PostMapping
     public CompletableFuture<ResponseEntity<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest order) {
         logger.debug("Received order request: {}", order);
-        return CompletableFuture.supplyAsync(() -> {
-            if (order.products().isEmpty()) {
-                logger.warn("Order request received with no products");
-                return new OrderContext(
-                    "N/A", 
-                    null, 
-                    "INVALID_REQUEST", 
-                    "No products in the order"
-                );
-            }
 
+        if (order.products().isEmpty()) {
+            logger.warn("Order request received with no products");
+            return CompletableFuture.completedFuture(ResponseEntity.badRequest().body(new OrderResponse("N/A", null, "INVALID_REQUEST", "No products in the order", "N/A")));
+        }
+
+        return CompletableFuture.supplyAsync(() -> {
             BigDecimal totalPrice = order.products().stream()
                 .map(Product::price)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

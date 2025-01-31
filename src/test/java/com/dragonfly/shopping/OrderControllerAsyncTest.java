@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
-class OrderControllerTest {
+class OrderControllerAsyncTest {
     private static final Logger logger = LoggerFactory.getLogger(OrderControllerTest.class);
 
     @Autowired
@@ -39,10 +39,16 @@ class OrderControllerTest {
         OrderRequest request = new OrderRequest("CUST123", List.of(product));
         
         logger.info("Sending request: {}", objectMapper.writeValueAsString(request));
-        
-        mockMvc.perform(post("/api/orders/v1")
+
+        MvcResult result = mockMvc.perform(post("/api/orders/v2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        logger.info("Async request started, waiting for completion...");
+        
+        mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.orderId").exists())
                 .andExpect(jsonPath("$.totalPrice").value("99.99"))
@@ -57,9 +63,13 @@ class OrderControllerTest {
     void createOrder_WithEmptyProducts_ShouldReturnBadRequest() throws Exception {
         OrderRequest request = new OrderRequest("CUST123", List.of());
 
-        mockMvc.perform(post("/api/orders/v1")
+        MvcResult result = mockMvc.perform(post("/api/orders/v2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.orderId").value("N/A"))
                 .andExpect(jsonPath("$.status").value("INVALID_REQUEST"))
@@ -75,9 +85,13 @@ class OrderControllerTest {
         );
         OrderRequest request = new OrderRequest("CUST123", products);
 
-        mockMvc.perform(post("/api/orders/v1")
+        MvcResult result = mockMvc.perform(post("/api/orders/v2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.totalPrice").value("30.0"))
