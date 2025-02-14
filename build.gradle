@@ -33,31 +33,13 @@ dependencies {
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 }
 
-// nativeImage {
-//     mainClass = 'com.dragonfly.shopping.ShoppingApplication'
-//     buildArgs = ['--no-fallback']
-// }
+bootBuildImage {
+    imageName = "${project.group}/${project.name}:${project.version}"
+}
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
-
-// sourceSets {
-// 	main {
-// 		java {
-// 			srcDirs = ['src/main/java']
-// 		}
-// 	}
-// 	test {
-// 		java {
-// 			srcDirs = ['src/test/java']
-// 		}
-// 	}
-// }
-
-// configurations {
-// 	developmentOnly
-// }
 
 bootRun {
 	// systemProperty "spring.profiles.active", System.getProperty("spring.profiles.active", "dev")

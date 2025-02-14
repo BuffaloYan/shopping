@@ -1,1 +1,6 @@
+version: '3.8'
 services:
+  app:
+    image: com.dragonfly/shopping:0.0.1-SNAPSHOT
+    ports:
+      - "8080:8080"
