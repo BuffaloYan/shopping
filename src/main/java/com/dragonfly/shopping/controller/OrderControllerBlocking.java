@@ -1,4 +1,4 @@
-package com.dragonfly.shopping;
+package com.dragonfly.shopping.controller;
 
 import com.dragonfly.shopping.model.OrderRequest;
 import com.dragonfly.shopping.model.OrderResponse;
@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/orders/v1")
-public class OrderController {
-    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
+public class OrderControllerBlocking {
+    private static final Logger logger = LoggerFactory.getLogger(OrderControllerBlocking.class);
     
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderRequest order) {

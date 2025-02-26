@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 class OrderControllerAsyncTest {
-    private static final Logger logger = LoggerFactory.getLogger(OrderControllerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderControllerAsyncTest.class);
 
     @Autowired
     private MockMvc mockMvc;

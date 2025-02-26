@@ -1,4 +1,4 @@
-package com.dragonfly.shopping;
+package com.dragonfly.shopping.controller;
 
 import com.dragonfly.shopping.model.OrderRequest;
 import com.dragonfly.shopping.model.OrderResponse;
@@ -20,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/orders/v2")
-public class OrderController2 {
-    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
+public class OrderControllerAsync {
+    private static final Logger logger = LoggerFactory.getLogger(OrderControllerAsync.class);
     
     @PostMapping
     public CompletableFuture<ResponseEntity<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest order) {
@@ -64,7 +64,7 @@ public class OrderController2 {
 
     /**
      * write a method which make a rest api call to the payment service
-     * @param orderRequest
+     * @param orderRequest order request detail
      * @return
      */
     public CompletableFuture<PaymentResponse> makePayment(OrderRequest orderRequest) {

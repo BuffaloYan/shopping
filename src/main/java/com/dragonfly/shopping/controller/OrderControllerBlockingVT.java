@@ -1,4 +1,4 @@
-package com.dragonfly.shopping;
+package com.dragonfly.shopping.controller;
 
 import com.dragonfly.shopping.model.OrderRequest;
 import com.dragonfly.shopping.model.OrderResponse;
@@ -23,8 +23,8 @@ import java.util.concurrent.Executors;
 
 @RestController
 @RequestMapping("/api/orders/v3")
-public class OrderControllerBlocking {
-    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
+public class OrderControllerBlockingVT {
+    private static final Logger logger = LoggerFactory.getLogger(OrderControllerBlockingVT.class);
     private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
     
     @PostMapping
