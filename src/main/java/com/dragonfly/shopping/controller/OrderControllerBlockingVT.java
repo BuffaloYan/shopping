@@ -2,8 +2,10 @@ package com.dragonfly.shopping.controller;
 
 import com.dragonfly.shopping.model.OrderRequest;
 import com.dragonfly.shopping.model.OrderResponse;
+import com.dragonfly.shopping.model.PaymentRequest;
 import com.dragonfly.shopping.model.PaymentResponse;
 import com.dragonfly.shopping.model.Product;
+import com.dragonfly.shopping.service.PaymentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,11 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 
 @RestController
@@ -26,7 +28,12 @@ import java.util.concurrent.Executors;
 public class OrderControllerBlockingVT {
     private static final Logger logger = LoggerFactory.getLogger(OrderControllerBlockingVT.class);
     private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
-    
+    private final PaymentService paymentService;
+
+    public OrderControllerBlockingVT(PaymentService paymentService) {
+        this.paymentService = paymentService;
+    }
+
     @PostMapping
     public CompletableFuture<ResponseEntity<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest order) {
         logger.debug("Received order request: {}", order);
@@ -52,7 +59,7 @@ public class OrderControllerBlockingVT {
                 logger.info("Order processed successfully: {}", response);
                 return ResponseEntity.ok(response);
 
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (ExecutionException | InterruptedException e) {
                 logger.error("Payment processing failed", e);
                 Thread.currentThread().interrupt();
                 return ResponseEntity.internalServerError()
@@ -61,13 +68,22 @@ public class OrderControllerBlockingVT {
         }, virtualExecutor);
     }
 
-    /**
-     * write a method which make a rest api call to the payment service
-     * @param orderRequest
-     * @return
-     */
     public CompletableFuture<PaymentResponse> makePayment(OrderRequest orderRequest) {
-        return new CompletableFuture<PaymentResponse>()
-            .completeOnTimeout(new PaymentResponse("PAYMENT_SUCCESS", "INV123"), 200, TimeUnit.MILLISECONDS);
+        BigDecimal totalAmount = orderRequest.products().stream()
+            .map(Product::price)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        String requestId = UUID.randomUUID().toString();
+        PaymentRequest paymentRequest = new PaymentRequest(
+            requestId,
+            orderRequest.customerId(),
+            totalAmount,
+            "CREDIT_CARD", // Default payment type
+            "payment-replies-" + requestId, // Default reply topic
+            Instant.now()
+        );
+
+        logger.info("Sending payment request: {}", paymentRequest);
+        return paymentService.processPayment(paymentRequest);
     }
 }

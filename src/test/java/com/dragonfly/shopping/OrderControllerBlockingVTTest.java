@@ -10,13 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.context.annotation.Import;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class OrderControllerAsyncTest {
-    private static final Logger logger = LoggerFactory.getLogger(OrderControllerAsyncTest.class);
+@Import(com.dragonfly.shopping.config.TestConfig.class)
+class OrderControllerBlockingVTTest {
+    private static final Logger logger = LoggerFactory.getLogger(OrderControllerBlockingVTTest.class);
 
     @Autowired
     private WebTestClient webTestClient;
@@ -31,7 +33,7 @@ class OrderControllerAsyncTest {
         
         logger.info("Sending request: {}", objectMapper.writeValueAsString(request));
 
-        webTestClient.post().uri("/api/orders/v2")
+        webTestClient.post().uri("/api/orders/v3")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -50,7 +52,7 @@ class OrderControllerAsyncTest {
     void createOrder_WithEmptyProducts_ShouldReturnBadRequest() throws Exception {
         OrderRequest request = new OrderRequest("CUST123", List.of());
 
-        webTestClient.post().uri("/api/orders/v2")
+        webTestClient.post().uri("/api/orders/v3")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -70,7 +72,7 @@ class OrderControllerAsyncTest {
         );
         OrderRequest request = new OrderRequest("CUST123", products);
 
-        webTestClient.post().uri("/api/orders/v2")
+        webTestClient.post().uri("/api/orders/v3")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()

@@ -16,6 +16,8 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.time.Instant;
+import com.dragonfly.shopping.model.PaymentRequest;
 
 @RestController
 @RequestMapping("/api/orders/v1")
@@ -56,5 +58,20 @@ public class OrderControllerBlocking {
     public CompletableFuture<PaymentResponse> makePayment(OrderRequest orderRequest) {
         return new CompletableFuture<PaymentResponse>()
             .completeOnTimeout(new PaymentResponse("PAYMENT_SUCCESS", "INV123"), 200, TimeUnit.MILLISECONDS);
+    }
+
+    private PaymentRequest createPaymentRequest(OrderRequest orderRequest) {
+        BigDecimal totalAmount = orderRequest.products().stream()
+            .map(Product::price)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new PaymentRequest(
+            UUID.randomUUID().toString(),
+            orderRequest.customerId(),
+            totalAmount,
+            "CREDIT_CARD", // Default payment type
+            "payment-replies", // Default reply topic
+            Instant.now()
+        );
     }
 }

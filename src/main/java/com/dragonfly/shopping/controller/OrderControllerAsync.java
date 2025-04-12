@@ -2,8 +2,10 @@ package com.dragonfly.shopping.controller;
 
 import com.dragonfly.shopping.model.OrderRequest;
 import com.dragonfly.shopping.model.OrderResponse;
+import com.dragonfly.shopping.model.PaymentRequest;
 import com.dragonfly.shopping.model.PaymentResponse;
 import com.dragonfly.shopping.model.Product;
+import com.dragonfly.shopping.service.PaymentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -78,6 +81,21 @@ public class OrderControllerAsync {
        return new CompletableFuture<PaymentResponse>()
             .completeOnTimeout(new PaymentResponse("PAYMENT_SUCCESS", "INV123"), 200, TimeUnit.MILLISECONDS);
 
+    }
+
+    private PaymentRequest createPaymentRequest(OrderRequest orderRequest) {
+        BigDecimal totalAmount = orderRequest.products().stream()
+            .map(Product::price)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new PaymentRequest(
+            UUID.randomUUID().toString(),
+            orderRequest.customerId(),
+            totalAmount,
+            "CREDIT_CARD", // Default payment type
+            "payment-replies", // Default reply topic
+            Instant.now()
+        );
     }
 
     private record OrderContext(String orderId, BigDecimal totalPrice, String status, String description) {}
