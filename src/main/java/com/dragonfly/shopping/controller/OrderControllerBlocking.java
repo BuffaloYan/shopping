@@ -43,7 +43,8 @@ public class OrderControllerBlocking {
             String orderId = UUID.randomUUID().toString().substring(0, 12);
             logger.debug("Generated order ID: {}", orderId);
 
-            PaymentResponse paymentResponse = makePayment(order).join();
+            String requestId = UUID.randomUUID().toString();
+            PaymentResponse paymentResponse = new PaymentResponse("SUCCESS", requestId, "INV123", null);
 
             OrderResponse response = new OrderResponse(orderId, totalPrice, "PAYMENT_SUCCESS", "Order processed successfully", paymentResponse.invoiceId());
             logger.info("Order processed successfully: {}", response);
@@ -56,8 +57,9 @@ public class OrderControllerBlocking {
     }
 
     public CompletableFuture<PaymentResponse> makePayment(OrderRequest orderRequest) {
+        String requestId = UUID.randomUUID().toString();
         return new CompletableFuture<PaymentResponse>()
-            .completeOnTimeout(new PaymentResponse("PAYMENT_SUCCESS", "INV123"), 200, TimeUnit.MILLISECONDS);
+            .completeOnTimeout(new PaymentResponse("PAYMENT_SUCCESS", requestId, "INV123", null), 200, TimeUnit.MILLISECONDS);
     }
 
     private PaymentRequest createPaymentRequest(OrderRequest orderRequest) {
@@ -65,13 +67,26 @@ public class OrderControllerBlocking {
             .map(Product::price)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        String requestId = UUID.randomUUID().toString();
         return new PaymentRequest(
-            UUID.randomUUID().toString(),
+            requestId,
             orderRequest.customerId(),
             totalAmount,
             "CREDIT_CARD", // Default payment type
-            "payment-replies", // Default reply topic
+            "payment-replies-" + requestId, // Unique reply topic per request
             Instant.now()
+        );
+    }
+
+    private record OrderContext(String orderId, BigDecimal totalPrice, String status, String description) {}
+
+    private OrderResponse createOrderResponse(OrderContext context) {
+        return new OrderResponse(
+            context.orderId(),
+            context.totalPrice(),
+            context.status(),
+            context.description(),
+            "INV123" // Default invoice ID for testing
         );
     }
 }

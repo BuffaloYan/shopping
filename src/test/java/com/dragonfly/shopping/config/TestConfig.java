@@ -1,6 +1,8 @@
 package com.dragonfly.shopping.config;
 
 import com.dragonfly.shopping.controller.OrderControllerBlockingVT;
+import com.dragonfly.shopping.controller.OrderControllerAsync;
+import com.dragonfly.shopping.controller.OrderControllerBlocking;
 import com.dragonfly.shopping.model.PaymentRequest;
 import com.dragonfly.shopping.model.PaymentResponse;
 import com.dragonfly.shopping.service.PaymentService;
@@ -14,18 +16,27 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
 
 @TestConfiguration
 public class TestConfig {
     
     @Bean
     @Primary
-    public PaymentService mockPaymentService() {
+    public PaymentService mockPaymentService(KafkaTemplate<String, PaymentRequest> kafkaTemplate) {
         PaymentService mockService = mock(PaymentService.class);
         when(mockService.processPayment(any(PaymentRequest.class)))
-            .thenReturn(CompletableFuture.completedFuture(new PaymentResponse("SUCCESS", "INV123")));
+            .thenAnswer(invocation -> {
+                PaymentRequest request = invocation.getArgument(0);
+                // Send to Kafka as part of the mock behavior
+                kafkaTemplate.send("payment-requests", request.requestId(), request);
+                return CompletableFuture.completedFuture(
+                    new PaymentResponse("SUCCESS", request.requestId(), "INV123", null)
+                );
+            });
         return mockService;
     }
     
@@ -36,7 +47,10 @@ public class TestConfig {
     }
     
     @Bean
-    public WebTestClient webTestClient(OrderControllerBlockingVT controller) {
-        return WebTestClient.bindToController(controller).build();
+    public WebTestClient webTestClient(
+            OrderControllerBlockingVT controllerVT,
+            OrderControllerAsync controllerAsync,
+            OrderControllerBlocking controllerBlocking) {
+        return WebTestClient.bindToController(controllerVT, controllerAsync, controllerBlocking).build();
     }
 } 
