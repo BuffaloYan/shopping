@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/*.jar /app/
 
 # Expose the port the application will run on
-EXPOSE 8080
+EXPOSE 8081
 
 # Run the JAR file when the container starts
 CMD ["java", "-jar", "app.jar"]

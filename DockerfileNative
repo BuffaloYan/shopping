@@ -1,0 +1,9 @@
+FROM ubuntu:22.04
+
+WORKDIR /app
+
+COPY build/native/nativeCompile/shopping-app /app/shopping-app
+
+EXPOSE 8081
+
+ENTRYPOINT ["/app/shopping-app"]

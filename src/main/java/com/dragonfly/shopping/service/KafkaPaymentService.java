@@ -10,6 +10,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+import org.springframework.core.env.Environment;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -22,9 +23,11 @@ public class KafkaPaymentService implements PaymentService {
     private final KafkaTemplate<String, PaymentRequest> kafkaTemplate;
     private static final String PAYMENT_TOPIC = "payment-requests";
     private final ConcurrentHashMap<String, CompletableFuture<PaymentResponse>> pendingResponses = new ConcurrentHashMap<>();
+    private final Environment environment;
 
-    public KafkaPaymentService(KafkaTemplate<String, PaymentRequest> kafkaTemplate) {
+    public KafkaPaymentService(KafkaTemplate<String, PaymentRequest> kafkaTemplate, Environment environment) {
         this.kafkaTemplate = kafkaTemplate;
+        this.environment = environment;
     }
 
     @Override
@@ -33,11 +36,27 @@ public class KafkaPaymentService implements PaymentService {
         try {
             validatePaymentRequest(request);
             
+            String replyTopic = String.format("%s-%s-%s-%s",
+                environment.getProperty("spring.application.name"),
+                environment.getProperty("kafka.topic.payment-replies"),
+                environment.getProperty("HOSTNAME", "localhost"),
+                UUID.randomUUID().toString());
+            
             CompletableFuture<PaymentResponse> responseFuture = new CompletableFuture<>();
             pendingResponses.put(request.requestId(), responseFuture);
             
+            // Create a new PaymentRequest with the updated reply topic
+            PaymentRequest updatedRequest = new PaymentRequest(
+                request.requestId(),
+                request.payerAccountNumber(),
+                request.amount(),
+                request.paymentType(),
+                replyTopic,
+                request.timestamp()
+            );
+            
             // Send to the payment requests topic
-            kafkaTemplate.send(PAYMENT_TOPIC, request.requestId(), request);
+            kafkaTemplate.send(PAYMENT_TOPIC, request.requestId(), updatedRequest);
             
             // Set a timeout for the response
             responseFuture.completeOnTimeout(
@@ -52,7 +71,7 @@ public class KafkaPaymentService implements PaymentService {
         }
     }
 
-    @KafkaListener(topics = "#{@environment.getProperty('kafka.topic.payment-replies')}-#{@environment.getProperty('spring.application.name')}-#{@environment.getProperty('server.port')}")
+    @KafkaListener(topics = "#{@environment.getProperty('spring.application.name')}-#{@environment.getProperty('kafka.topic.payment-replies')}-#{@environment.getProperty('HOSTNAME', 'localhost')}-#{T(java.util.UUID).randomUUID().toString()}")
     public void receivePaymentResponse(@Payload PaymentResponse response, @Header(KafkaHeaders.RECEIVED_KEY) String requestId) {
         logger.info("Received payment response for request {}: {}", requestId, response);
         CompletableFuture<PaymentResponse> future = pendingResponses.remove(requestId);
