@@ -56,8 +56,8 @@ public class OrderControllerBlockingVT {
                 PaymentResponse paymentResponse = makePayment(order).get();
                 logger.debug("Payment response: {}", paymentResponse);
 
-                OrderResponse response = new OrderResponse(orderId, totalPrice, "PAYMENT_SUCCESS", "Order processed successfully", paymentResponse.invoiceId());
-                if (paymentResponse.invoiceId() == null) {
+                OrderResponse response = new OrderResponse(orderId, totalPrice, "PAYMENT_SUCCESS", "Order processed successfully", paymentResponse.getInvoiceId());
+                if (paymentResponse.getInvoiceId() == null) {
                     logger.error("Payment response received with null invoice ID");
                     return ResponseEntity.internalServerError()
                         .body(new OrderResponse("N/A", null, "PAYMENT_FAILED", "Payment response received with null invoice ID", "N/A"));

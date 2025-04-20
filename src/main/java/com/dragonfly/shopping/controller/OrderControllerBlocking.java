@@ -46,7 +46,7 @@ public class OrderControllerBlocking {
             String requestId = UUID.randomUUID().toString();
             PaymentResponse paymentResponse = new PaymentResponse("SUCCESS", requestId, "INV123", null);
 
-            OrderResponse response = new OrderResponse(orderId, totalPrice, "PAYMENT_SUCCESS", "Order processed successfully", paymentResponse.invoiceId());
+            OrderResponse response = new OrderResponse(orderId, totalPrice, "PAYMENT_SUCCESS", "Order processed successfully", paymentResponse.getInvoiceId());
             logger.info("Order processed successfully: {}", response);
             return ResponseEntity.ok(response);
 

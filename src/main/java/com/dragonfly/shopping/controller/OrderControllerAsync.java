@@ -52,7 +52,7 @@ public class OrderControllerAsync {
                     context.totalPrice(), 
                     context.status(),
                     context.description(),
-                    paymentResponse.invoiceId()
+                    paymentResponse.getInvoiceId()
                 );
                 logger.info("Order processed successfully: {}", response);
                 return ResponseEntity.ok(response);

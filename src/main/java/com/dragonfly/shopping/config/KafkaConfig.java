@@ -16,6 +16,8 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.dragonfly.shopping.model.PaymentRequest;
 import com.dragonfly.shopping.model.PaymentResponse;
 
@@ -26,6 +28,8 @@ import java.util.Map;
 public class KafkaConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaConfig.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+        .enable(SerializationFeature.INDENT_OUTPUT);
 
     @Value("${spring.kafka.bootstrap-servers:localhost:9092}")
     private String bootstrapServers;
@@ -70,10 +74,23 @@ public class KafkaConfig {
         // Configure error handling
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
             (consumerRecord, exception) -> {
-                // Log the error and the record that failed
-                logger.error("Failed to process message: {}", consumerRecord.value());
-                logger.error("Exception: {}", exception.getMessage());
-                logger.error("Stack trace: ", exception);
+                try {
+                    // Log the raw message data
+                    logger.error("Raw message key: {}", consumerRecord.key());
+                    logger.error("Raw message value: {}", consumerRecord.value().toString());
+                    logger.error("Raw message headers: {}", consumerRecord.headers());
+                    logger.error("Raw message topic: {}", consumerRecord.topic());
+                    logger.error("Raw message partition: {}", consumerRecord.partition());
+                    logger.error("Raw message offset: {}", consumerRecord.offset());
+                    logger.error("Raw message timestamp: {}", consumerRecord.timestamp());
+                    
+                    // Log the error details
+                    logger.error("Failed to process message");
+                    logger.error("Exception: {}", exception.getMessage());
+                    logger.error("Stack trace: ", exception);
+                } catch (Exception e) {
+                    logger.error("Error while logging message: {}", e.getMessage());
+                }
             },
             new FixedBackOff(1000L, 3) // Retry 3 times with 1 second interval
         );
