@@ -61,7 +61,7 @@ public class KafkaPaymentService implements PaymentService {
             // Set a timeout for the response
             responseFuture.completeOnTimeout(
                 new PaymentResponse("TIMEOUT", request.requestId(), null, "Payment response timeout"),
-                30, TimeUnit.SECONDS
+                10, TimeUnit.SECONDS
             );
             
             return responseFuture;

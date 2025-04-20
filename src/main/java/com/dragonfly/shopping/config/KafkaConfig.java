@@ -9,8 +9,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.dragonfly.shopping.model.PaymentRequest;
 import com.dragonfly.shopping.model.PaymentResponse;
 
@@ -19,6 +24,8 @@ import java.util.Map;
 
 @Configuration
 public class KafkaConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConfig.class);
 
     @Value("${spring.kafka.bootstrap-servers:localhost:9092}")
     private String bootstrapServers;
@@ -45,9 +52,13 @@ public class KafkaConfig {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        configProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "com.dragonfly.shopping.model");
+        configProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, PaymentResponse.class);
+        configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
@@ -55,6 +66,20 @@ public class KafkaConfig {
     public ConcurrentKafkaListenerContainerFactory<String, PaymentResponse> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, PaymentResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        
+        // Configure error handling
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
+            (consumerRecord, exception) -> {
+                // Log the error and the record that failed
+                logger.error("Failed to process message: {}", consumerRecord.value());
+                logger.error("Exception: {}", exception.getMessage());
+                logger.error("Stack trace: ", exception);
+            },
+            new FixedBackOff(1000L, 3) // Retry 3 times with 1 second interval
+        );
+        
+        factory.setCommonErrorHandler(errorHandler);
+        
         return factory;
     }
 } 
