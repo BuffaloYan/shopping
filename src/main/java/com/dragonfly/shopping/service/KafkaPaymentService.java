@@ -40,7 +40,7 @@ public class KafkaPaymentService implements PaymentService {
                 environment.getProperty("spring.application.name"),
                 environment.getProperty("kafka.topic.payment-replies"),
                 environment.getProperty("HOSTNAME", "localhost"),
-                UUID.randomUUID().toString());
+                environment.getProperty("server.port"));
             
             CompletableFuture<PaymentResponse> responseFuture = new CompletableFuture<>();
             pendingResponses.put(request.requestId(), responseFuture);
@@ -71,7 +71,7 @@ public class KafkaPaymentService implements PaymentService {
         }
     }
 
-    @KafkaListener(topics = "#{@environment.getProperty('spring.application.name')}-#{@environment.getProperty('kafka.topic.payment-replies')}-#{@environment.getProperty('HOSTNAME', 'localhost')}-#{T(java.util.UUID).randomUUID().toString()}")
+    @KafkaListener(topics = "#{@environment.getProperty('spring.application.name')}-#{@environment.getProperty('kafka.topic.payment-replies')}-#{@environment.getProperty('HOSTNAME', 'localhost')}-#{@environment.getProperty('server.port')}")
     public void receivePaymentResponse(@Payload PaymentResponse response, @Header(KafkaHeaders.RECEIVED_KEY) String requestId) {
         logger.info("Received payment response for request {}: {}", requestId, response);
         CompletableFuture<PaymentResponse> future = pendingResponses.remove(requestId);
